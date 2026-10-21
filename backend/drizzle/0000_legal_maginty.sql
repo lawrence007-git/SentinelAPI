@@ -1,0 +1,20 @@
+CREATE TABLE "monitors" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"name" text NOT NULL,
+	"url" text NOT NULL,
+	"method" text DEFAULT 'GET' NOT NULL,
+	"headers" jsonb DEFAULT '{}'::jsonb NOT NULL,
+	"body" text,
+	"interval_seconds" integer DEFAULT 300 NOT NULL,
+	"timeout_ms" integer DEFAULT 10000 NOT NULL,
+	"expected_status" integer DEFAULT 200 NOT NULL,
+	"enabled" boolean DEFAULT true NOT NULL,
+	"status" text DEFAULT 'pending' NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "monitors_method_check" CHECK ("monitors"."method" IN ('GET','POST','PUT','PATCH','DELETE','HEAD')),
+	CONSTRAINT "monitors_interval_check" CHECK ("monitors"."interval_seconds" BETWEEN 60 AND 86400),
+	CONSTRAINT "monitors_timeout_check" CHECK ("monitors"."timeout_ms" BETWEEN 1000 AND 60000),
+	CONSTRAINT "monitors_status_code_check" CHECK ("monitors"."expected_status" BETWEEN 100 AND 599),
+	CONSTRAINT "monitors_status_check" CHECK ("monitors"."status" IN ('pending','up','down'))
+);
