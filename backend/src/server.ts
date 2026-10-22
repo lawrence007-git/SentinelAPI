@@ -1,12 +1,14 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import { pool } from "./db.js";
+import { monitorRoutes } from "./routes/monitors.js";
 
 const app = Fastify({ logger: true,
 });
 
 await app.register(cors, {
     origin: process.env.FRONTEND_ORIGIN ?? "http://localhost:3000"
+    
 });
 
 app.get("/health", async (request, reply) => {
@@ -19,4 +21,5 @@ app.get("/health", async (request, reply) => {
   }
 });
 
+await app.register(monitorRoutes);
 await app.listen ({port: 4000, host: "0.0.0.0"});
