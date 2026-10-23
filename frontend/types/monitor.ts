@@ -15,3 +15,12 @@ export type Monitor = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type CreateMonitorInput = {
+  name: string;
+  url: string;
+  method: string;
+  intervalSeconds: number;
+  timeoutMs: number;
+  expectedStatus: number;
+};

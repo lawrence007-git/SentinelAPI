@@ -3,11 +3,14 @@ import cors from "@fastify/cors";
 import { pool } from "./db.js";
 import { monitorRoutes } from "./routes/monitors.js";
 
+
 const app = Fastify({ logger: true,
 });
 
 await app.register(cors, {
-    origin: process.env.FRONTEND_ORIGIN ?? "http://localhost:3000"
+    origin: process.env.FRONTEND_ORIGIN ?? "http://localhost:3000",
+    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+
     
 });
 
