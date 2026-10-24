@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { METHODS, monitorFormSchema, type MonitorFormValues } from "@/lib/monitorSchema";
-import { createMonitor } from "@/lib/monitor";
-
+import { createMonitor, updateMonitor } from "@/lib/monitor";
+import type { Monitor } from "@/types/monitor";
 import { ApiError } from "@/lib/api";
 
 const INTERVALS = [
@@ -47,7 +47,8 @@ function Field({
   );
 }
 
-export default function MonitorForm() {
+export default function MonitorForm({ monitor }: { monitor?: Monitor }) {
+  const isEditing = monitor !== undefined;
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -57,7 +58,16 @@ export default function MonitorForm() {
     formState: { errors, isSubmitting },
   } = useForm<MonitorFormValues>({
     resolver: zodResolver(monitorFormSchema),
-    defaultValues: {
+    defaultValues: monitor
+  ? {
+      name: monitor.name,
+      url: monitor.url,
+      method: monitor.method as MonitorFormValues["method"],
+      intervalSeconds: monitor.intervalSeconds,
+      timeoutSeconds: monitor.timeoutMs / 1000,
+      expectedStatus: monitor.expectedStatus,
+    }
+  : {
       name: "",
       url: "",
       method: "GET",
@@ -65,20 +75,27 @@ export default function MonitorForm() {
       timeoutSeconds: 10,
       expectedStatus: 200,
     },
+
   });
 
   async function onSubmit(values: MonitorFormValues) {
     setServerError(null);
     try {
-      await createMonitor({
+      const input = {
         name: values.name,
         url: values.url,
         method: values.method,
         intervalSeconds: values.intervalSeconds,
         timeoutMs: values.timeoutSeconds * 1000,
         expectedStatus: values.expectedStatus,
-      });
-      router.push("/monitors");
+      };
+      if (monitor) {
+        await updateMonitor(monitor.id, input);
+      } else {
+        await createMonitor(input);
+      }
+          router.push("/monitors"); 
+          router.refresh();
     } catch (err) {
     if (err instanceof ApiError && err.status === 400) {
         setServerError("The server rejected some of these values. Check them and try again.");
@@ -87,7 +104,7 @@ export default function MonitorForm() {
     }
     }
     }
-
+  
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
       <Field label="Name" htmlFor="name" error={errors.name?.message}>
@@ -170,8 +187,7 @@ export default function MonitorForm() {
 
       <div className="flex items-center gap-3">
         <button type="submit" className="btn-primary" disabled={isSubmitting}>
-          {isSubmitting ? "Saving…" : "Save monitor"}
-        </button>
+        {isSubmitting ? "Saving…" : isEditing ? "Save changes" : "Save monitor"}        </button>
         <Link href="/monitors" className="btn-ghost">
           Cancel
         </Link>

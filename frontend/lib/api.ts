@@ -6,12 +6,19 @@ export class ApiError extends Error {
     }
 }
 
-export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T>{
-    const res = await fetch(`${API_URL}${path}`, {
-        ...init,
-        headers: { "Content-Type": "application/json", ...init?.headers },
-        cache: "no-store",
-    });
-    if(!res.ok) throw new ApiError(res.status, `Api request failed:  ${res.statusText}` );
-    return res.json() as Promise<T>;
+export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const hasBody = init?.body !== undefined;
+
+  const res = await fetch(`${API_URL}${path}`, {
+    ...init,
+    headers: {
+      ...(hasBody ? { "Content-Type": "application/json" } : {}),
+      ...init?.headers,
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) throw new ApiError(res.status, `Request failed: ${res.statusText}`);
+  if (res.status === 204) return undefined as T;
+  return res.json() as Promise<T>;
 }

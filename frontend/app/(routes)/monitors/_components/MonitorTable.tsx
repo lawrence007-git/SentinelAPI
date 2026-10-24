@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { getMonitors } from "@/lib/monitor";
 import type { Monitor } from "@/types/monitor";
 import StatusBadge from "@/components/custom/StatusBadge";
+import DeleteMonitorButton from "./DeleteMonitorButton";
+import Link from "next/link";
 
 type State =
   | { kind: "loading" }
@@ -37,6 +39,13 @@ export default function MonitorTable() {
           </p>
         </div>
       );
+    function handleDeleted(id: string) {
+      setState((current) =>
+      current.kind === "ready"
+      ? { kind: "ready", monitors: current.monitors.filter((m) => m.id !== id) }
+      : current
+      );
+  }
 
     return (
       <div className="panel overflow-x-auto">
@@ -47,6 +56,9 @@ export default function MonitorTable() {
               <th className="px-4 py-3 font-medium">Name</th>
               <th className="px-4 py-3 font-medium">Endpoint</th>
               <th className="px-4 py-3 font-medium">Checks</th>
+              <th className="px-4 py-3 font-medium">
+              <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -59,6 +71,12 @@ export default function MonitorTable() {
                   {m.url}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{formatInterval(m.intervalSeconds)}</td>
+                <td className="px-4 py-3 text-right">
+                <Link href={`/monitors/edit/${m.id}`} className="btn-ghost">
+                  Edit
+                </Link>
+                    <DeleteMonitorButton id={m.id} name={m.name} onDeleted={handleDeleted} />
+               </td>
               </tr>
             ))}
           </tbody>
