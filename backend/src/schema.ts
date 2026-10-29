@@ -1,7 +1,9 @@
 import {
-  pgTable, uuid, text, jsonb, integer, boolean, timestamp, check,
+  pgTable, uuid, text, jsonb, integer, boolean, timestamp, check, index,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+
+
 
 export const monitors = pgTable(
   "monitors",
@@ -28,3 +30,36 @@ export const monitors = pgTable(
     check("monitors_status_check", sql`${t.status} IN ('pending','up','down')`),
   ]
 );
+
+export const testRuns = pgTable(
+  "test_runs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    monitorId: uuid("monitor_id")
+      .notNull()
+      .references(() => monitors.id, { onDelete: "cascade" }),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    durationMs: integer("duration_ms"),
+    statusCode: integer("status_code"),
+    passed: boolean("passed").notNull(),
+    failureReason: text("failure_reason"),
+    errorMessage: text("error_message"),
+  },
+  (t) => [
+    check(
+    "test_runs_failure_reason_check",
+    sql`${t.failureReason} IS NULL OR ${t.failureReason} IN ('timeout','connection_error','unexpected_status','blocked')`
+  ),
+  check(
+    "test_runs_outcome_check",
+    sql`(${t.passed} AND ${t.failureReason} IS NULL AND ${t.errorMessage} IS NULL)
+        OR (NOT ${t.passed} AND ${t.failureReason} IS NOT NULL)`
+  ),
+  check(
+    "test_runs_status_code_check",
+    sql`(${t.failureReason} IS NULL OR ${t.failureReason} = 'unexpected_status')
+        = (${t.statusCode} IS NOT NULL)`
+  ),
+  index("test_runs_monitor_started_idx").on(t.monitorId, t.startedAt.desc()),
+]
+)

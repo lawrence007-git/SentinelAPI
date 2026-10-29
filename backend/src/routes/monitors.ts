@@ -1,7 +1,8 @@
 import type { FastifyInstance } from "fastify";
 import { createMonitorSchema, updateMonitorSchema } from "../validation.js";
 import { db } from "../db.js";
-import {monitors} from "../schema.js";
+import { monitors, testRuns } from "../schema.js";
+import { runCheck } from "../runner.js";
 import { desc } from "drizzle-orm";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
@@ -96,6 +97,70 @@ export async function monitorRoutes(app: FastifyInstance) {
 
         return reply.status(204).send();
     });
+
+    app.post("/monitors/:id/run", async (request, reply) => {
+    const params = idParamsSchema.safeParse(request.params);
+    if (!params.success) {
+        return reply.status(400).send({ error: "Invalid monitor id" });
+    }
+
+    const [monitor] = await db
+        .select()
+        .from(monitors)
+        .where(eq(monitors.id, params.data.id));
+
+    if (!monitor) {
+        return reply.status(404).send({ error: "Monitor not found" });
+    }
+
+    const outcome = await runCheck(monitor);
+
+    const run = await db.transaction(async (tx) => {
+    const [saved] = await tx
+        .insert(testRuns)
+        .values({
+            monitorId: monitor.id,
+            passed: outcome.passed,
+            statusCode: outcome.statusCode,
+            durationMs: outcome.durationMs,
+            failureReason: outcome.passed ? null : outcome.failureReason,
+            errorMessage: outcome.passed ? null : outcome.errorMessage,
+            })
+        .returning();
+
+        await tx
+        .update(monitors)
+        .set({ status: outcome.passed ? "up" : "down" })
+        .where(eq(monitors.id, monitor.id));
+
+        return saved;
+    });
+
+    return reply.status(201).send(run);
+    });
+
+        app.get("/monitors/:id/runs", async (request, reply) => {
+  const params = idParamsSchema.safeParse(request.params);
+  if (!params.success) {
+    return reply.status(400).send({ error: "Invalid monitor id" });
+  }
+
+  const [monitor] = await db
+    .select({ id: monitors.id })
+    .from(monitors)
+    .where(eq(monitors.id, params.data.id));
+
+  if (!monitor) {
+    return reply.status(404).send({ error: "Monitor not found" });
+  }
+
+  return db
+    .select()
+    .from(testRuns)
+    .where(eq(testRuns.monitorId, monitor.id))
+    .orderBy(desc(testRuns.startedAt))
+    .limit(50);
+});
 
 }
 

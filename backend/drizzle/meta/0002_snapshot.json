@@ -1,0 +1,253 @@
+{
+  "id": "2c47c79d-4d7e-4db0-bd82-348beab69d51",
+  "prevId": "73a82735-a5c6-414a-a8a4-8bb787288a88",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.monitors": {
+      "name": "monitors",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "method": {
+          "name": "method",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'GET'"
+        },
+        "headers": {
+          "name": "headers",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "interval_seconds": {
+          "name": "interval_seconds",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 300
+        },
+        "timeout_ms": {
+          "name": "timeout_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 10000
+        },
+        "expected_status": {
+          "name": "expected_status",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 200
+        },
+        "enabled": {
+          "name": "enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "monitors_method_check": {
+          "name": "monitors_method_check",
+          "value": "\"monitors\".\"method\" IN ('GET','POST','PUT','PATCH','DELETE','HEAD')"
+        },
+        "monitors_interval_check": {
+          "name": "monitors_interval_check",
+          "value": "\"monitors\".\"interval_seconds\" BETWEEN 60 AND 86400"
+        },
+        "monitors_timeout_check": {
+          "name": "monitors_timeout_check",
+          "value": "\"monitors\".\"timeout_ms\" BETWEEN 1000 AND 60000"
+        },
+        "monitors_status_code_check": {
+          "name": "monitors_status_code_check",
+          "value": "\"monitors\".\"expected_status\" BETWEEN 100 AND 599"
+        },
+        "monitors_status_check": {
+          "name": "monitors_status_check",
+          "value": "\"monitors\".\"status\" IN ('pending','up','down')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.test_runs": {
+      "name": "test_runs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "monitor_id": {
+          "name": "monitor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "duration_ms": {
+          "name": "duration_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status_code": {
+          "name": "status_code",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "passed": {
+          "name": "passed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "failure_reason": {
+          "name": "failure_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "error_message": {
+          "name": "error_message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "test_runs_monitor_started_idx": {
+          "name": "test_runs_monitor_started_idx",
+          "columns": [
+            {
+              "expression": "monitor_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "started_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "test_runs_monitor_id_monitors_id_fk": {
+          "name": "test_runs_monitor_id_monitors_id_fk",
+          "tableFrom": "test_runs",
+          "tableTo": "monitors",
+          "columnsFrom": [
+            "monitor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "test_runs_failure_reason_check": {
+          "name": "test_runs_failure_reason_check",
+          "value": "\"test_runs\".\"failure_reason\" IS NULL OR \"test_runs\".\"failure_reason\" IN ('timeout','connection_error','unexpected_status','blocked')"
+        },
+        "test_runs_outcome_check": {
+          "name": "test_runs_outcome_check",
+          "value": "(\"test_runs\".\"passed\" AND \"test_runs\".\"failure_reason\" IS NULL AND \"test_runs\".\"error_message\" IS NULL)\n        OR (NOT \"test_runs\".\"passed\" AND \"test_runs\".\"failure_reason\" IS NOT NULL)"
+        },
+        "test_runs_status_code_check": {
+          "name": "test_runs_status_code_check",
+          "value": "(\"test_runs\".\"failure_reason\" IS NULL OR \"test_runs\".\"failure_reason\" = 'unexpected_status')\n        = (\"test_runs\".\"status_code\" IS NOT NULL)"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
