@@ -93,11 +93,21 @@ export default function DeleteMonitorButton({
 
             {/* Centered Clean Copy */}
             <div className="space-y-2">
-              <h3 id="delete-monitor-title" className="text-lg font-semibold text-foreground">
+              <h3
+                id="delete-monitor-title"
+                className="text-lg font-semibold text-foreground"
+              >
                 Delete monitor?
               </h3>
-              <p id="delete-monitor-desc" className="text-sm text-muted-foreground leading-relaxed">
-                Are you sure you want to delete <span className="font-semibold whitespace-per-line text-foreground">{name}</span>? 
+              <p
+                id="delete-monitor-desc"
+                className="text-sm text-muted-foreground leading-relaxed"
+              >
+                Are you sure you want to delete{" "}
+                <span className="font-semibold whitespace-per-line text-foreground">
+                  {name}
+                </span>
+                ?
                 <br /> This action cannot be undone.
               </p>
             </div>

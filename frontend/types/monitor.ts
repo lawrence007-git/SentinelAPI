@@ -24,3 +24,20 @@ export type CreateMonitorInput = {
   timeoutMs: number;
   expectedStatus: number;
 };
+
+export type FailureReason =
+  | "timeout"
+  | "connection_error"
+  | "unexpected_status"
+  | "blocked";
+
+export type TestRun = {
+  id: string;
+  monitorId: string;
+  startedAt: string;
+  durationMs: number | null;
+  statusCode: number | null;
+  passed: boolean;
+  failureReason: FailureReason | null;
+  errorMessage: string | null;
+};

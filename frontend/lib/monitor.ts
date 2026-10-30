@@ -1,6 +1,6 @@
 import { apiFetch } from "@/lib/api";
-import type { Monitor } from "@/types/monitor";
-import type { CreateMonitorInput } from "@/types/monitor";
+import type { Monitor, CreateMonitorInput, TestRun } from "@/types/monitor";
+
 
 export function getMonitors() {
   return apiFetch<Monitor[]>("/monitors");
@@ -25,4 +25,12 @@ export function updateMonitor(id: string, input: CreateMonitorInput) {
 
 export function deleteMonitor(id: string) {
   return apiFetch<void>(`/monitors/${id}`, { method: "DELETE" });
+}
+
+export function runMonitor(id: string) {
+  return apiFetch<TestRun>(`/monitors/${id}/run`, { method: "POST" });
+}
+
+export function getRuns(id: string) {
+  return apiFetch<TestRun[]>(`/monitors/${id}/runs`);
 }

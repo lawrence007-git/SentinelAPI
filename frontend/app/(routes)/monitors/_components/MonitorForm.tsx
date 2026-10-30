@@ -5,7 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { METHODS, monitorFormSchema, type MonitorFormValues } from "@/lib/monitorSchema";
+import {
+  METHODS,
+  monitorFormSchema,
+  type MonitorFormValues,
+} from "@/lib/monitorSchema";
 import { createMonitor, updateMonitor } from "@/lib/monitor";
 import type { Monitor } from "@/types/monitor";
 import { ApiError } from "@/lib/api";
@@ -37,7 +41,9 @@ function Field({
         {label}
       </label>
       {children}
-      {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
+      {hint && !error && (
+        <p className="text-xs text-muted-foreground">{hint}</p>
+      )}
       {error && (
         <p className="text-xs text-destructive" role="alert">
           {error}
@@ -59,23 +65,22 @@ export default function MonitorForm({ monitor }: { monitor?: Monitor }) {
   } = useForm<MonitorFormValues>({
     resolver: zodResolver(monitorFormSchema),
     defaultValues: monitor
-  ? {
-      name: monitor.name,
-      url: monitor.url,
-      method: monitor.method as MonitorFormValues["method"],
-      intervalSeconds: monitor.intervalSeconds,
-      timeoutSeconds: monitor.timeoutMs / 1000,
-      expectedStatus: monitor.expectedStatus,
-    }
-  : {
-      name: "",
-      url: "",
-      method: "GET",
-      intervalSeconds: 300,
-      timeoutSeconds: 10,
-      expectedStatus: 200,
-    },
-
+      ? {
+          name: monitor.name,
+          url: monitor.url,
+          method: monitor.method as MonitorFormValues["method"],
+          intervalSeconds: monitor.intervalSeconds,
+          timeoutSeconds: monitor.timeoutMs / 1000,
+          expectedStatus: monitor.expectedStatus,
+        }
+      : {
+          name: "",
+          url: "",
+          method: "GET",
+          intervalSeconds: 300,
+          timeoutSeconds: 10,
+          expectedStatus: 200,
+        },
   });
 
   async function onSubmit(values: MonitorFormValues) {
@@ -94,21 +99,30 @@ export default function MonitorForm({ monitor }: { monitor?: Monitor }) {
       } else {
         await createMonitor(input);
       }
-          router.push("/monitors"); 
-          router.refresh();
+      router.push("/monitors");
+      router.refresh();
     } catch (err) {
-    if (err instanceof ApiError && err.status === 400) {
-        setServerError("The server rejected some of these values. Check them and try again.");
-    } else {
-        setServerError("Could not reach the server. Check that the backend is running, then try again.");
+      if (err instanceof ApiError && err.status === 400) {
+        setServerError(
+          "The server rejected some of these values. Check them and try again.",
+        );
+      } else {
+        setServerError(
+          "Could not reach the server. Check that the backend is running, then try again.",
+        );
+      }
     }
-    }
-    }
-  
+  }
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
       <Field label="Name" htmlFor="name" error={errors.name?.message}>
-        <input id="name" className="field" placeholder="Products API" {...register("name")} />
+        <input
+          id="name"
+          className="field"
+          placeholder="Products API"
+          {...register("name")}
+        />
       </Field>
 
       <Field
@@ -136,7 +150,11 @@ export default function MonitorForm({ monitor }: { monitor?: Monitor }) {
           </select>
         </Field>
 
-        <Field label="Check frequency" htmlFor="intervalSeconds" error={errors.intervalSeconds?.message}>
+        <Field
+          label="Check frequency"
+          htmlFor="intervalSeconds"
+          error={errors.intervalSeconds?.message}
+        >
           <select
             id="intervalSeconds"
             className="field"
@@ -187,7 +205,12 @@ export default function MonitorForm({ monitor }: { monitor?: Monitor }) {
 
       <div className="flex items-center gap-3">
         <button type="submit" className="btn-primary" disabled={isSubmitting}>
-        {isSubmitting ? "Saving…" : isEditing ? "Save changes" : "Save monitor"}        </button>
+          {isSubmitting
+            ? "Saving…"
+            : isEditing
+              ? "Save changes"
+              : "Save monitor"}{" "}
+        </button>
         <Link href="/monitors" className="btn-ghost">
           Cancel
         </Link>
